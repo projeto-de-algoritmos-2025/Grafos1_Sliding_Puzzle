@@ -19,7 +19,9 @@ const game = new Game([
 async function animate() {
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    game.draw(ctx, image, 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'orange'
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    game.draw(ctx, image, 10, 10, canvas.width-20, canvas.height-20);
 }
 animate();
 
@@ -28,10 +30,30 @@ const randomizeButton = document.getElementById("randomizeButton");
 randomizeButton.addEventListener("click", () => {
     game.randomize();
 });
-
 document.addEventListener("gameAnimateStart", () => {
     randomizeButton.disabled = true;
 });
 document.addEventListener("gameAnimateEnd", () => {
     randomizeButton.disabled = false;
+});
+
+canvas.addEventListener("mousedown", () => {
+    ctx.mouseClick = true;
+});
+canvas.addEventListener("mouseup", () => {
+    ctx.mouseClick = false;
+});
+canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (game.isAnimating) {
+        ctx.mousePos = {
+            x: -1,
+            y: -1,
+        }
+    } else {
+        ctx.mousePos = {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top,
+        }
+    }
 });

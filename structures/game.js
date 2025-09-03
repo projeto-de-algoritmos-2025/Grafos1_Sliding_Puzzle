@@ -1,3 +1,4 @@
+/**@type {[number, number][]} */
 const movements = [
     [-1, 0], // CIMA
     [0, 1],  // DIREITA
@@ -34,26 +35,32 @@ export class Game {
         }
     }
 
+    get isAnimating() {
+        return this.#isAnimating;
+    }
+
     #isValidCoordinate(i, j) {
         return i >= 0 && i < 3 && j >= 0 && j < 3;
     }
 
+    #moveTo(i, j) {
+        this.#board[this.#emptyPieceI][this.#emptyPieceJ] = this.#board[i][j];
+        this.#board[i][j] = 8;
+        this.#emptyPieceI = i;
+        this.#emptyPieceJ = j;
+    }
+
+    /**@returns {[number, number][]} */
     possibleMoves() {
         return movements.map(movement => {
             const newI = this.#emptyPieceI + movement[0];
             const newJ = this.#emptyPieceJ + movement[1];
             return [newI, newJ];
         })
-            .filter(([i, j]) => this.#isValidCoordinate(i, j))
-            .map(([i, j]) => {
-                const boardCopy = this.#board.map(row => row.map(piece => piece));
-                boardCopy[i][j] = 8;
-                boardCopy[this.#emptyPieceI][this.#emptyPieceJ] = this.#board[i][j];
-                return new Game(boardCopy);
-            });
+        .filter(([i, j]) => this.#isValidCoordinate(i, j));
     }
 
-    async randomize(qtd = 100, delay = 100) {
+    async randomize(qtd = 100, delay = 10) {
         if(this.#isAnimating) {
             return;
         }
@@ -61,19 +68,68 @@ export class Game {
         document.dispatchEvent(new CustomEvent("gameAnimateStart"));
 
         for (let i = 0; i < qtd; i++) {
-            const possibleStates = this.possibleMoves();
-            const randomIndex = Math.floor(Math.random() * possibleStates.length);
-
-            const randomState = possibleStates[randomIndex];
-
+            const possibleMovements = this.possibleMoves();
+            const randomMove = possibleMovements[Math.floor(Math.random() * possibleMovements.length)];
+            this.#moveTo(randomMove[0], randomMove[1]);
             await new Promise((resolve) => setTimeout(resolve, delay));
-            this.#board = randomState.#board;
-            this.#emptyPieceI = randomState.#emptyPieceI;
-            this.#emptyPieceJ = randomState.#emptyPieceJ;
         }
 
         this.#isAnimating = false;
         document.dispatchEvent(new CustomEvent("gameAnimateEnd"));
+    }
+
+
+    #isAdjacentToEmpty(i, j) {
+        return Math.abs(i - this.#emptyPieceI) + Math.abs(j - this.#emptyPieceJ) === 1;
+    }
+
+
+    #prevSelectI = null;
+    #prevSelectJ = null;
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} width 
+     * @param {number} height 
+     * @param {number} pieceWidth 
+     * @param {number} pieceHeight 
+     * @param {number} padding 
+     * @returns {[boolean, number, number]}
+     */
+    #handleMouseEvent(ctx, x, y, width, height, pieceWidth, pieceHeight, padding) {
+        if(!ctx.mouseClick || !ctx.mousePos) {
+            this.#prevSelectI = null;
+            this.#prevSelectJ = null;
+            return [false, -1, -1];
+        }
+        
+        const mousePos = ctx.mousePos;
+        const mouseI = mousePos.x >= x && mousePos.x <= x+width ? Math.floor((mousePos.y - y)/(pieceWidth + padding)) : -1;
+        const mouseJ = mousePos.y >= y && mousePos.y <= y+height ? Math.floor((mousePos.x - x)/(pieceHeight + padding)) : -1;
+
+        const isMouseEventValid =
+            this.#isValidCoordinate(mouseI, mouseJ) && this.#isAdjacentToEmpty(mouseI, mouseJ)
+            || (mouseI === this.#emptyPieceI && mouseJ === this.#emptyPieceJ);
+
+        if(!isMouseEventValid) {
+            this.#prevSelectI = null;
+            this.#prevSelectJ = null;
+            return [false, mouseI, mouseJ];
+        }
+        
+        if(
+            this.#prevSelectI != null && this.#prevSelectJ != null 
+            && (mouseI != this.#prevSelectI || mouseJ != this.#prevSelectJ)
+            && (mouseI == this.#emptyPieceI && mouseJ == this.#emptyPieceJ)
+        ) {
+            this.#moveTo(this.#prevSelectI, this.#prevSelectJ);
+        }
+        this.#prevSelectI = mouseI;
+        this.#prevSelectJ = mouseJ;
+
+        return [true, mouseI, mouseJ];
     }
 
     draw(ctx, image, x, y, width, height) {
@@ -86,10 +142,35 @@ export class Game {
         const imgPieceWidht = image.naturalWidth / 3;
         const imgPieceHeight = image.naturalHeight / 3;
 
+        const [isMouseEventValid, mouseI, mouseJ] = this.#handleMouseEvent(
+            ctx,
+            x,
+            y,
+            width,
+            height,
+            pieceWidth,
+            pieceHeight,
+            padding
+        );
+
+        const emptyPieceX = this.#emptyPieceJ * (pieceWidth + padding) + x;
+        const emptyPieceY = this.#emptyPieceI * (pieceWidth + padding) + y;
+
         this.#board.forEach((line, i) => {
             line.forEach((boardPiece, j) => {
-                const pieceX = j * (pieceWidth + padding) + x;
-                const pieceY = i * (pieceHeight + padding) + y;
+                let pieceX = j * (pieceWidth + padding) + x;
+                let pieceY = i * (pieceHeight + padding) + y;
+                if(isMouseEventValid && j == mouseJ && mouseI == i) {
+                    if(mouseI == this.#emptyPieceI) {
+                        const minX = Math.min(emptyPieceX, pieceX);
+                        const maxX = Math.max(emptyPieceX, pieceX);
+                        pieceX = Math.min(Math.max(minX, ctx.mousePos.x - pieceWidth/2), maxX);
+                    } else if(mouseJ == this.#emptyPieceJ) {
+                        const minY = Math.min(emptyPieceY, pieceY);
+                        const maxY = Math.max(emptyPieceY, pieceY);
+                        pieceY = Math.min(Math.max(minY, ctx.mousePos.y - pieceHeight/2), maxY);
+                    }
+                }
 
                 const pieceOriginalI = Math.floor(boardPiece / 3);
                 const pieceOriginalJ = boardPiece % 3;

@@ -11,9 +11,9 @@ canvas.height = 600;
 
 const ctx = canvas.getContext("2d");
 const game = new Game([
-    [0, 2, 1],
-    [3, 4, 5],
-    [6, 8, 7]
+    [0, 1, 8],
+    [3, 4, 2],
+    [6, 7, 5]
 ]);
 
 async function animate() {

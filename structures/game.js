@@ -132,6 +132,73 @@ export class Game {
         return [true, mouseI, mouseJ];
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {number} pieceHeight 
+     * @param {number} pieceWidth 
+     * @param {number} pieceX 
+     * @param {number} pieceY 
+     * @param {'black' | 'white'} color 
+     * @param {number} width 
+     */
+    #drawPieceLabel(ctx, boardPiece, pieceHeight, pieceWidth, pieceX, pieceY, width, innerColor, outerColor) {
+        const minPieceMeasure = Math.min(pieceHeight, pieceWidth);
+        const textPadding = minPieceMeasure * 0.05;
+        const radius = minPieceMeasure * 0.1;
+
+        const beforeLineWidth = ctx.lineWidth;
+        const beforeStrokeColor = ctx.strokeStyle;
+        const beforeFont = ctx.font = `${radius}px Arial`;
+        const beforeTextAlign = ctx.textAlign = "center";
+        const beforeTextBaseline = ctx.textBaseline = "middle";
+
+        ctx.lineWidth = width + 1;
+        ctx.strokeStyle = outerColor;
+        ctx.beginPath();
+        ctx.arc(
+            pieceX + textPadding + radius,
+            pieceY + textPadding + radius,
+            radius,
+            0,
+            Math.PI * 2
+        );
+        ctx.stroke();
+
+        ctx.lineWidth = width;
+        ctx.strokeStyle = innerColor;
+        ctx.beginPath();
+        ctx.arc(
+            pieceX + textPadding + radius,
+            pieceY + textPadding + radius,
+            radius,
+            0,
+            Math.PI * 2
+        );
+        ctx.stroke();
+
+
+        ctx.font = `${radius*1.5}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = innerColor;
+        ctx.strokeStyle = outerColor;
+
+        ctx.beginPath();
+        ctx.strokeText(
+            (boardPiece + 1).toString(), pieceX + textPadding + radius, pieceY + textPadding + radius
+        );
+        ctx.fillText(
+            (boardPiece + 1).toString(), pieceX + textPadding + radius, pieceY + textPadding + radius
+        );
+
+        ctx.lineWidth = beforeLineWidth;
+        ctx.strokeStyle = beforeStrokeColor;
+        ctx.font = beforeFont;
+        ctx.textAlign = beforeTextAlign;
+        ctx.textBaseline = beforeTextBaseline;
+    }
+
     draw(ctx, image, x, y, width, height) {
         const padding = 3;
         width = width - padding * 2;
@@ -191,6 +258,10 @@ export class Game {
                         pieceWidth,
                         pieceHeight
                     );
+                    this.#drawPieceLabel(
+                        ctx, boardPiece, pieceHeight, pieceWidth,
+                        pieceX, pieceY, 3, "black", "white"
+                    )
                 }
             });
         });

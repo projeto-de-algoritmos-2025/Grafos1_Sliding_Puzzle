@@ -1,3 +1,5 @@
+import { Queue } from './queue.js'
+
 /**@type {[number, number][]} */
 const movements = [
     [-1, 0], // CIMA
@@ -48,10 +50,11 @@ export class Game {
         this.#board[i][j] = 8;
         this.#emptyPieceI = i;
         this.#emptyPieceJ = j;
+        return this;
     }
 
     /**@returns {[number, number][]} */
-    possibleMoves() {
+    #possibleMoves() {
         return movements.map(movement => {
             const newI = this.#emptyPieceI + movement[0];
             const newJ = this.#emptyPieceJ + movement[1];
@@ -68,12 +71,108 @@ export class Game {
         document.dispatchEvent(new CustomEvent("gameAnimateStart"));
 
         for (let i = 0; i < qtd; i++) {
-            const possibleMovements = this.possibleMoves();
+            const possibleMovements = this.#possibleMoves();
             const randomMove = possibleMovements[Math.floor(Math.random() * possibleMovements.length)];
             this.#moveTo(randomMove[0], randomMove[1]);
             await new Promise((resolve) => setTimeout(resolve, delay));
         }
 
+        this.#isAnimating = false;
+        document.dispatchEvent(new CustomEvent("gameAnimateEnd"));
+    }
+
+    #copy() {
+        return new Game(this.#board.map(row => row.map(piece => piece)));
+    }
+
+    #toInt() {
+        let intValue = 0;
+        let weight = 1;
+        for(let i = 0; i< 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                intValue += weight * this.#board[i][j];
+                weight *= 9;
+            }
+        }
+        return intValue;
+    }
+
+    /**
+     * @param {number} boardInt 
+     * @returns {[GameBoard, number, number]}
+     */
+    static #fromInt(boardInt) {
+        const board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+        let emptyPieceI;
+        let emptyPieceJ;
+
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                const value = boardInt % 9;
+                if (value == 8) {
+                    emptyPieceI = i;
+                    emptyPieceJ = j;
+                }
+
+                board[i][j] = value;
+                boardInt = Math.floor(boardInt / 9);
+            }
+        }
+        
+        return [board, emptyPieceI, emptyPieceJ];
+    }
+
+    #isSolved() {
+        return this.#toInt() === 381367044;
+    }
+
+    async solve(delay = 1000) {
+        if(this.#isAnimating) {
+            return;
+        }
+        this.#isAnimating = true;
+        document.dispatchEvent(new CustomEvent("gameAnimateStart"));
+
+        /** @type {Queue<Game>} */
+        const queue = new Queue();
+        /** @type {Set<number>} */
+        const inQueue = new Set();
+        /** @type {Map<number, number>} */
+        const cameFrom = new Map();
+
+        queue.push(this);
+        inQueue.add(this.#toInt());
+
+        while(!queue.isEmpty()) {
+            const actualState = queue.pop();
+            if(actualState.#isSolved()) {
+                break;
+            }
+            const actualStateAsInt = actualState.#toInt();
+            
+            for(const [i, j] of actualState.#possibleMoves()) {
+                const newState = actualState.#copy().#moveTo(i, j);
+                const newStateAsInt = newState.#toInt();
+
+                if(!inQueue.has(newStateAsInt)) {
+                    queue.push(newState);
+                    inQueue.add(newStateAsInt);
+                    cameFrom.set(newStateAsInt, actualStateAsInt);
+                }
+            }
+        }
+
+        const path = [];
+        let actualState = 381367044; // solved state
+        while(cameFrom.get(actualState)) {
+            path.push(actualState);
+            actualState = cameFrom.get(actualState);;
+        }
+
+        for await (const state of path.reverse()) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            [this.#board, this.#emptyPieceI, this.#emptyPieceJ] = Game.#fromInt(state);
+        }
         this.#isAnimating = false;
         document.dispatchEvent(new CustomEvent("gameAnimateEnd"));
     }

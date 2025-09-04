@@ -30,11 +30,18 @@ const randomizeButton = document.getElementById("randomizeButton");
 randomizeButton.addEventListener("click", () => {
     game.randomize();
 });
+/**@type {HTMLButtonElement} */
+const solveButton = document.getElementById("solveButton");
+solveButton.addEventListener("click", () => {
+    game.solve();
+});
 document.addEventListener("gameAnimateStart", () => {
     randomizeButton.disabled = true;
+    solveButton.disabled = true;
 });
 document.addEventListener("gameAnimateEnd", () => {
     randomizeButton.disabled = false;
+    solveButton.disabled = false;
 });
 
 canvas.addEventListener("mousedown", () => {

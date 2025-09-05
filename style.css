@@ -25,3 +25,15 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+canvas {
+    touch-action: none;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}

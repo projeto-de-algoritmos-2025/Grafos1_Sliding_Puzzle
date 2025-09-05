@@ -16,7 +16,23 @@ const game = new Game([
     [6, 7, 5]
 ]);
 
+function adjustCanvasSize() {
+    if (window.innerWidth > 1400) {
+        canvas.width = 600;
+        canvas.height = 600;
+        gameImage.width = 600;
+        gameImage.height = 600;
+    } else {
+        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 400);
+        canvas.width = size;
+        canvas.height = size;
+        gameImage.width = size;
+        gameImage.height = size;
+    }
+}
+
 async function animate() {
+    adjustCanvasSize();
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillStyle = 'orange'
@@ -44,13 +60,7 @@ document.addEventListener("gameAnimateEnd", () => {
     solveButton.disabled = false;
 });
 
-canvas.addEventListener("mousedown", () => {
-    ctx.mouseClick = true;
-});
-canvas.addEventListener("mouseup", () => {
-    ctx.mouseClick = false;
-});
-canvas.addEventListener("mousemove", (event) => {
+function updateMousePos(x, y) {
     const rect = canvas.getBoundingClientRect();
     if (game.isAnimating) {
         ctx.mousePos = {
@@ -59,8 +69,37 @@ canvas.addEventListener("mousemove", (event) => {
         }
     } else {
         ctx.mousePos = {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
+            x: x - rect.left,
+            y: y - rect.top,
         }
     }
+}
+
+// Mouse Events
+canvas.addEventListener("mousedown", (e) => {
+    updateMousePos(e.clientX, e.clientY);
+    ctx.mouseClick = true;
 });
+canvas.addEventListener("mouseup", () => {
+    ctx.mouseClick = false;
+});
+canvas.addEventListener("mousemove", (e) => {
+    updateMousePos(e.clientX, e.clientY);
+});
+
+// Touch Events
+canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    updateMousePos(touch.clientX, touch.clientY);
+    ctx.mouseClick = true;
+}, { passive: false });
+canvas.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    ctx.mouseClick = false;
+}, { passive: false });
+canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    updateMousePos(touch.clientX, touch.clientY);
+}, { passive: false });

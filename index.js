@@ -1,8 +1,17 @@
 import { Game } from "./structures/game.js"
 
-const image = document.getElementById("gameImage");
+const image = document.createElement("img");
+image.src = "assets/imagemInicial.jpg"
 image.width = 600;
 image.height = 600;
+
+const imageInput = document.getElementById("imageInput");
+imageInput.addEventListener("change", (event) => {
+    /**@type {HTMLInputElement} */
+    const input = event.target;
+    const file = input.files[0];
+    image.src = URL.createObjectURL(file);
+});
 
 /**@type {HTMLCanvasElement} */
 const canvas = document.getElementById("myCanvas");
@@ -16,30 +25,30 @@ const game = new Game([
     [6, 7, 5]
 ]);
 
-function adjustCanvasSize() {
-    if (window.innerWidth > 1400) {
-        canvas.width = 600;
-        canvas.height = 600;
-        gameImage.width = 600;
-        gameImage.height = 600;
-    } else {
-        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 400);
-        canvas.width = size;
-        canvas.height = size;
-        gameImage.width = size;
-        gameImage.height = size;
-    }
-}
-
-async function animate() {
+function animate() {
     adjustCanvasSize();
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.fillStyle = 'orange'
+    ctx.fillStyle = '#eee'
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     game.draw(ctx, image, 10, 10, canvas.width-20, canvas.height-20);
 }
 animate();
+
+function adjustCanvasSize() {
+    if (window.innerWidth > 1400) {
+        canvas.width = 600;
+        canvas.height = 600;
+        image.width = 600;
+        image.height = 600;
+    } else {
+        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 400);
+        canvas.width = size;
+        canvas.height = size;
+        image.width = size;
+        image.height = size;
+    }
+}
 
 /**@type {HTMLButtonElement} */
 const randomizeButton = document.getElementById("randomizeButton");

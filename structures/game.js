@@ -186,7 +186,6 @@ export class Game {
     #prevSelectI = null;
     #prevSelectJ = null;
     /**
-     * 
      * @param {CanvasRenderingContext2D} ctx 
      * @param {number} x 
      * @param {number} y 
@@ -298,6 +297,15 @@ export class Game {
         ctx.textBaseline = beforeTextBaseline;
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {HTMLImageElement} image
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
     draw(ctx, image, x, y, width, height) {
         const padding = 3;
         width = width - padding * 2;
@@ -305,8 +313,27 @@ export class Game {
 
         const pieceWidth = width / 3;
         const pieceHeight = height / 3;
-        const imgPieceWidht = image.naturalWidth / 3;
-        const imgPieceHeight = image.naturalHeight / 3;
+
+        const imgRatio = image.naturalWidth/image.naturalHeight;
+        const boardRatio = width/height;
+
+        let imgXOffset = 0;
+        let imgYOffset = 0;
+        let imgPieceWidth = image.naturalWidth / 3;
+        let imgPieceHeight = image.naturalHeight / 3;
+        if(imgRatio < boardRatio) {
+            const scale = width/image.naturalWidth;
+            const scaledHeigth = image.naturalHeight*scale;
+            imgYOffset = (scaledHeigth - height)/2/scale;
+            imgPieceHeight = pieceHeight/scale;
+            console.log({scale, scaledHeigth, height, imgPieceHeight, pieceHeight})
+        } else {
+            const scale = height/image.naturalHeight;
+            const scaledWidth = image.naturalWidth*scale;
+            imgXOffset = (scaledWidth - width)/2/scale;
+            imgPieceWidth = pieceWidth/scale;
+            console.log({iw: image.naturalWidth, imgXOffset, imgPieceWidth})
+        }
 
         const [isMouseEventValid, mouseI, mouseJ] = this.#handleMouseEvent(
             ctx,
@@ -341,15 +368,15 @@ export class Game {
                 const pieceOriginalI = Math.floor(boardPiece / 3);
                 const pieceOriginalJ = boardPiece % 3;
 
-                const imgX = Math.floor(image.naturalWidth / 3 * (pieceOriginalJ));
-                const imgY = Math.floor(image.naturalHeight / 3 * (pieceOriginalI));
+                const imgX = imgPieceWidth * (pieceOriginalJ);
+                const imgY = imgPieceHeight * (pieceOriginalI);
 
                 if (boardPiece != 8) {
                     ctx.drawImage(
                         image,
-                        imgX,
-                        imgY,
-                        imgPieceWidht,
+                        imgX + imgXOffset,
+                        imgY + imgYOffset,
+                        imgPieceWidth,
                         imgPieceHeight,
 
                         pieceX,

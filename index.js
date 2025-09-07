@@ -2,8 +2,8 @@ import { Game } from "./structures/game.js"
 
 const image = document.createElement("img");
 image.src = "assets/imagemInicial.jpg"
-image.width = 600;
-image.height = 600;
+image.width = 500;
+image.height = 500;
 
 const imageInput = document.getElementById("imageInput");
 imageInput.addEventListener("change", (event) => {
@@ -15,8 +15,8 @@ imageInput.addEventListener("change", (event) => {
 
 /**@type {HTMLCanvasElement} */
 const canvas = document.getElementById("myCanvas");
-canvas.width = 600;
-canvas.height = 600;
+canvas.width = 500;
+canvas.height = 500;
 
 const ctx = canvas.getContext("2d");
 const game = new Game([
@@ -36,13 +36,13 @@ function animate() {
 animate();
 
 function adjustCanvasSize() {
-    if (window.innerWidth > 1400) {
-        canvas.width = 600;
-        canvas.height = 600;
-        image.width = 600;
-        image.height = 600;
+    if (window.innerWidth > 1500) {
+        canvas.width = 500;
+        canvas.height = 500;
+        image.width = 500;
+        image.height = 500;
     } else {
-        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 400);
+        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 500);
         canvas.width = size;
         canvas.height = size;
         image.width = size;

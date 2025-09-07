@@ -166,7 +166,7 @@ export class Game {
         let actualState = 381367044; // solved state
         while(cameFrom.get(actualState)) {
             path.push(actualState);
-            actualState = cameFrom.get(actualState);;
+            actualState = cameFrom.get(actualState);
         }
 
         for await (const state of path.reverse()) {
@@ -326,13 +326,11 @@ export class Game {
             const scaledHeigth = image.naturalHeight*scale;
             imgYOffset = (scaledHeigth - height)/2/scale;
             imgPieceHeight = pieceHeight/scale;
-            console.log({scale, scaledHeigth, height, imgPieceHeight, pieceHeight})
         } else {
             const scale = height/image.naturalHeight;
             const scaledWidth = image.naturalWidth*scale;
             imgXOffset = (scaledWidth - width)/2/scale;
             imgPieceWidth = pieceWidth/scale;
-            console.log({iw: image.naturalWidth, imgXOffset, imgPieceWidth})
         }
 
         const [isMouseEventValid, mouseI, mouseJ] = this.#handleMouseEvent(

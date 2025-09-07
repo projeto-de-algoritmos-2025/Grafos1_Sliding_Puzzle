@@ -36,13 +36,13 @@ function animate() {
 animate();
 
 function adjustCanvasSize() {
-    if (window.innerWidth > 1500) {
+    if (window.innerWidth > 640) {
         canvas.width = 500;
         canvas.height = 500;
         image.width = 500;
         image.height = 500;
     } else {
-        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) * 0.9, 500);
+        const size = Math.min(Math.min(window.innerHeight, window.innerWidth) - 96, 400);
         canvas.width = size;
         canvas.height = size;
         image.width = size;
